@@ -1,0 +1,262 @@
+<style>
+  /* New Vibrant Colorful Theme with Blurred Splash Background */
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #FFF8E1; /* Light yellow */
+    color: #212121;
+  }
+  /* Splash Screen Styles */
+  #splash-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  #splash-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #B3E5FC, #81D4FA);
+    filter: blur(5px);
+    z-index: -1;
+  }
+  .splash-title {
+    font-size: 3rem;
+    color: #D32F2F;
+    margin-bottom: 20px;
+    animation: fadeIn 2s ease-in-out;
+  }
+  #enter-team-btn, #enter-individual-btn {
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    background-color: #E91E63;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    animation: fadeIn 2s ease-in-out;
+    margin: 10px;
+  }
+  #enter-team-btn:hover, #enter-individual-btn:hover {
+    background-color: #C2185B;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  
+  /* Registration Form Containers */
+  #team-registration-container, 
+  #individual-registration-container {
+    display: none;
+    padding: 20px;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    border: 1px solid #FF9800;
+    margin: 20px;
+  }
+  
+  h1, h3, h2 {
+    text-align: center;
+    color: #D32F2F;
+  }
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 2rem;
+    margin-top: 40px;
+  }
+  h3 {
+    font-size: 1.5rem;
+    margin-top: 5px;
+    color: #D32F2F;
+  }
+  p {
+    text-align: left;
+    font-size: 1.2rem;
+    color: #212121;
+    margin-bottom: 20px;
+  }
+  form {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    border: 1px solid #FF9800;
+  }
+  label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 1.2rem;
+    color: #1976D2;
+  }
+  input[type="text"],
+  input[type="email"],
+  select {
+    width: 97%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #FF9800;
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: #FFFFFF;
+  }
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  select:focus {
+    border-color: #FBC02D;
+    outline: none;
+    box-shadow: 0 0 5px rgba(251,192,45,0.5);
+  }
+  button {
+    background-color: #E91E63;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #C2185B;
+  }
+  button:disabled {
+    background-color: #B0BEC5;
+    cursor: not-allowed;
+  }
+  /* Team Members Section */
+  #players-container, #team-players-container {
+    margin-top: 20px;
+  }
+  #players-container .row, #team-players-container .row {
+    display: flex;
+    flex-wrap: nowrap;  /* Ensure a single row */
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #EEEEEE;
+    background-color: #F5F5F5;
+  }
+  #players-container .row:nth-child(even), #team-players-container .row:nth-child(even) {
+    background-color: #E0F7FA;
+  }
+  #players-container .row:last-child, #team-players-container .row:last-child {
+    border-bottom: none;
+  }
+  #players-container label, #team-players-container label {
+    flex: 1 1 12%;
+    text-align: right;
+    padding-right: 10px;
+    font-size: 0.9rem;
+    color: #1976D2;
+  }
+  #players-container input, #team-players-container input {
+    flex: 1 1 18%;
+    padding: 10px;
+    font-size: 0.9rem;
+    border: 1px solid #FF9800;
+    border-radius: 5px;
+    background-color: #FFFFFF;
+  }
+  #players-container .team-name-input, #team-players-container .team-name-input {
+    flex: 2 1 40%;
+  }
+  #players-container .roll-input, #team-players-container .roll-input,
+  #players-container .room-input, #team-players-container .room-input {
+    flex: 1 1 12%;
+  }
+  #players-container button, #team-players-container button {
+    flex: 0 0 8%;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    background-color: #E64A19;
+    color: white;
+    border-radius: 5px;
+  }
+  #players-container button:hover, #team-players-container button:hover {
+    background-color: #D84315;
+  }
+  #team-name {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #FF9800;
+    border-radius: 5px;
+    background-color: #FFFFFF;
+  }
+  #team-name:focus {
+    border-color: #FF9800;
+    outline: none;
+    box-shadow: 0 0 5px rgba(251,192,45,0.5);
+  }
+  /* Submit Button */
+  form button {
+    display: block;
+    width: 100%;
+    max-width: 250px;
+    margin: 20px auto;
+    background-color: #E91E63;
+    color: white;
+  }
+  form button:hover {
+    background-color: #C2185B;
+  }
+  /* Registered Teams Section */
+  #registered-teams-container {
+    max-width: 900px;
+    margin: 40px auto 0;
+    padding: 20px;
+    background-color: #FFFFFF;
+    border: 1px solid #FF9800;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .team-item {
+    border: 1px solid #FF9800;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #C5E1A5;
+  }
+  .team-item h3 {
+    margin-top: 0;
+    font-size: 1.5rem;
+  }
+  .team-item ul {
+    margin: 5px 0 0 20px;
+  }
+  @media (max-width: 768px) {
+    #players-container .row, #team-players-container .row {
+      flex-wrap: wrap;
+    }
+    #players-container label,
+    #players-container input,
+    #players-container button,
+    #team-players-container label,
+    #team-players-container input,
+    #team-players-container button,
+    select {
+      flex: 1 1 100%;
+      text-align: left;
+      margin-bottom: 5px;
+    }
+  }
+</style>
