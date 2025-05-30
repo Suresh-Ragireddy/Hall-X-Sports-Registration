@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Football Registration</title>
+    <script>
+      let playerCount = 0; // For team registration
+
+      /* --- TEAM REGISTRATION FUNCTIONS --- */
+      function updateNamesBasedOnHall() {
+        const hall = document.getElementById("team-captain-hall").value;
+        google.script.run.withSuccessHandler(fillDropdown).getNamesForHall(hall);
+      }
+      function fillDropdown(data) {
+        let dropdown = document.getElementById("name-list");
+        if (!dropdown) {
+          dropdown = document.createElement("datalist");
+          dropdown.id = "name-list";
+          document.body.appendChild(dropdown);
+        } else {
+          dropdown.innerHTML = "";
+        }
+        data.forEach(function(row) {
+          const option = document.createElement("option");
+          option.value = row[0];
+          option.textContent = `(${row[1]}) - ${row[2]}`;
+          option.dataset.roll = row[1];
+          option.dataset.room = row[2];
+          dropdown.appendChild(option);
+        });
+        document.querySelectorAll(".team-name-input").forEach(function(input) {
+          input.setAttribute("list", "name-list");
+          input.addEventListener("input", function() {
+            const selectedOption = Array.from(dropdown.children).find(function(option) {
+              return option.value === input.value;
+            });
+            const parent = input.closest(".row");
+            if (selectedOption) {
+              parent.querySelector(".roll-input").value = selectedOption.dataset.roll;
+              parent.querySelector(".room-input").value = selectedOption.dataset.room;
+            } else {
+              parent.querySelector(".roll-input").value = "";
+              parent.querySelector(".room-input").value = "";
+            }
+          });
+        });
+      }
+      // Allow up to 11 rows (7 compulsory + 4 substitutes)
+      function addTeamPlayerRow() {
+        if (playerCount >= 11) {
+          alert("You cannot add more than 11 players.");
+          return;
+        }
+        playerCount++;
+        const container = document.getElementById("team-players-container");
+        const row = document.createElement("div");
+        row.className = "row";
+        const labelText = playerCount <= 7 ? `Player ${playerCount}:` : `Substitute ${playerCount - 7}:`;
+        row.innerHTML = `
+          <label>${labelText}</label>
+          <input type="text" class="team-name-input" placeholder="Type or select a name..." required />
+          <label>Roll Number:</label>
+          <input type="text" class="roll-input" placeholder="Auto-filled or enter manually" required />
+          <label>Room Number:</label>
+          <input type="text" class="room-input" placeholder="Auto-filled or enter manually" required />
+          <button type="button" onclick="removeTeamPlayerRow(this)">Remove</button>
+        `;
+        container.appendChild(row);
+        updateNamesBasedOnHall();
+      }
+      function removeTeamPlayerRow(button) {
+        const row = button.closest(".row");
+        row.remove();
+        playerCount--;
+        updateTeamPlayerNumbers();
+      }
+      function updateTeamPlayerNumbers() {
+        const rows = document.querySelectorAll("#team-players-container .row");
+        rows.forEach(function(row, index) {
+          const labelText = index < 7 ? `Player ${index + 1}:` : `Substitute ${index - 7 + 1}:`;
+          row.querySelector("label").textContent = labelText;
+        });
+      }
+      function saveTeamRegistration() {
+        const teamName = document.getElementById("team-name").value;
+        if (!teamName) {
+          alert("Team Name is required!");
+          return;
+        }
+        const hall = document.getElementById("team-captain-hall").value;
+        const captainRow = document.getElementById("team-captain-row");
+        const captainDetails = [
+          captainRow.querySelector(".team-name-input").value,
+          captainRow.querySelector(".roll-input").value,
+          captainRow.querySelector(".room-input").value,
+          captainRow.querySelector(".whatsapp-input").value,
+          captainRow.querySelector(".email-input").value
+        ];
+        if (captainDetails.includes("")) {
+          alert("All captain fields are mandatory!");
+          return;
+        }
+        const playerRows = document.querySelectorAll("#team-players-container .row");
+        const playersDetails = Array.from(playerRows).map(function(row) {
+          const name = row.querySelector(".team-name-input").value;
+          const roll = row.querySelector(".roll-input").value;
+          const room = row.querySelector(".room-input").value;
+          if (!name || !roll || !room) {
+            alert("All player fields are mandatory!");
+            throw new Error("Missing player field(s)");
+          }
+          return [name, roll, room];
+        });
+        if (playersDetails.length < 7) {
+          alert("You must enter at least 7 players!");
+          return;
+        }
+        google.script.run.saveData(teamName, hall, captainDetails, playersDetails);
+        document.getElementById("team-registration-container").innerHTML = `
+          <h1>Thank you for your team registration!</h1>
+          <p>Your sports secretary will be contacted for further details.</p>
+        `;
+        loadRegisteredTeams();
+      }
+      function initializeTeamRegistration() {
+        document.getElementById("team-registration-container").style.display = "block";
+        document.getElementById("individual-registration-container").style.display = "none";
+        playerCount = 0;
+        const container = document.getElementById("team-players-container");
+        container.innerHTML = "";
+        for (let i = 0; i < 7; i++) {
+          addTeamPlayerRow();
+        }
+      }
+
+      /* --- INDIVIDUAL REGISTRATION FUNCTIONS --- */
+      function updateIndividualNamesBasedOnHall() {
+        const hall = document.getElementById("individual-hall").value;
+        google.script.run.withSuccessHandler(fillIndividualDropdown).getNamesForHall(hall);
+      }
+      function fillIndividualDropdown(data) {
+        let dropdown = document.getElementById("individual-name-list");
+        if (!dropdown) {
+          dropdown = document.createElement("datalist");
+          dropdown.id = "individual-name-list";
+          document.body.appendChild(dropdown);
+        } else {
+          dropdown.innerHTML = "";
+        }
+        data.forEach(function(row) {
+          const option = document.createElement("option");
+          option.value = row[0];
+          option.textContent = `(${row[1]}) - ${row[2]}`;
+          option.dataset.roll = row[1];
+          option.dataset.room = row[2];
+          dropdown.appendChild(option);
+        });
+        const input = document.getElementById("individual-name");
+        input.setAttribute("list", "individual-name-list");
+        input.addEventListener("input", function() {
+          const selectedOption = Array.from(dropdown.children).find(function(option) {
+            return option.value === input.value;
+          });
+          if (selectedOption) {
+            document.getElementById("individual-roll").value = selectedOption.dataset.roll;
+            document.getElementById("individual-room").value = selectedOption.dataset.room;
+          } else {
+            document.getElementById("individual-roll").value = "";
+            document.getElementById("individual-room").value = "";
+          }
+        });
+      }
+      function saveIndividualRegistration() {
+        const hall = document.getElementById("individual-hall").value;
+        const name = document.getElementById("individual-name").value;
+        const roll = document.getElementById("individual-roll").value;
+        const room = document.getElementById("individual-room").value;
+        const whatsapp = document.getElementById("individual-whatsapp").value;
+        const email = document.getElementById("individual-email").value;
+        if (!name || !roll || !room || !whatsapp || !email) {
+          alert("All fields are mandatory for individual registration!");
+          return;
+        }
+        google.script.run.saveIndividualData([name, roll, room, hall, whatsapp, email]);
+        document.getElementById("individual-registration-container").innerHTML = `
+          <h1>Thank you for your registration!</h1>
+          <p>Your sports secretary will be contacted for further details.</p>
+        `;
+      }
+      function initializeIndividualRegistration() {
+        document.getElementById("individual-registration-container").style.display = "block";
+        document.getElementById("team-registration-container").style.display = "none";
+        updateIndividualNamesBasedOnHall();
+      }
+
+      /* --- SPLASH SCREEN MODE SELECTION --- */
+      function enterTeamRegistration() {
+        document.getElementById("splash-screen").style.display = "none";
+        initializeTeamRegistration();
+      }
+      function enterIndividualRegistration() {
+        document.getElementById("splash-screen").style.display = "none";
+        initializeIndividualRegistration();
+      }
+
+      /* --- LOAD REGISTERED TEAMS --- */
+      function loadRegisteredTeams() {
+        google.script.run.withSuccessHandler(displayRegisteredTeams).getRegisteredTeams();
+      }
+      function displayRegisteredTeams(teams) {
+        const container = document.getElementById("registered-teams");
+        if (!teams || teams.length === 0) {
+          container.innerHTML = "<p>No teams registered yet.</p>";
+          return;
+        }
+        let html = "";
+        teams.forEach(function(team) {
+          html += `<div class="team-item">
+                     <h3>${team.teamName}</h3>
+                     <p><strong>Hall:</strong> ${team.hall}</p>
+                     <p><strong>Captain:</strong> ${team.captainName || "N/A"}</p>
+                     <p><strong>Players:</strong></p>
+                     <ul>`;
+          team.players.forEach(function(player) {
+            html += `<li>${player}</li>`;
+          });
+          html += `</ul>
+                   </div>`;
+        });
+        container.innerHTML = html;
+      }
+
+      window.onload = function() {
+        // Initially show splash screen; hide both registration forms.
+        document.getElementById("team-registration-container").style.display = "none";
+        document.getElementById("individual-registration-container").style.display = "none";
+        loadRegisteredTeams();  // Load registered teams immediately upon page load.
+      };
+    </script>
+  </head>
+  <body>
+    <!-- Splash Screen Container -->
+    <div id="splash-screen">
+      <h1 class="splash-title">Football Registration Form<br>Hall 10 and 11 Welcomes You</h1>
+      <button id="enter-team-btn" onclick="enterTeamRegistration()">Team Registration</button>
+      <br><br>
+      <button id="enter-individual-btn" onclick="enterIndividualRegistration()">Individual Registration</button>
+    </div>
+    
+    <!-- Team Registration Container -->
+    <div id="team-registration-container">
+      <h1>Football Team Registration</h1>
+      <form id="team-form">
+        <h3>Instructions:</h3>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">1.</strong> 
+          Fill in the <strong>Team Name</strong> and <strong>Select the Hall</strong> first. Please note that only details corresponding to the chosen hall should be filled – both the captain and players must be from the same hall.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">2.</strong> 
+          Fill in the captain's details and details for <strong>7 players + 4 substitutes</strong> (a maximum of 11 players). All fields are mandatory.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">3.</strong> 
+          The venue is tentatively set at the <strong>Hall 10 &amp; 11 Common Yard</strong>. The final venue and date will be decided after considering the number of registrations and resident feedback.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">4.</strong> 
+          The registration fee is <strong>₹29/person</strong>. For a team of 10, the total fee is <strong>₹299 per Team</strong>.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">5.</strong> 
+          After submission, the captain will be contacted for further details.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">6.</strong> 
+          Only the team captain fills out the form.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">7.</strong> 
+          For best results, use a Desktop or Laptop.
+        </p>
+        
+        <h3>Team Information:</h3>
+        <label for="team-name">Team Name:</label>
+        <input type="text" id="team-name" placeholder="Enter your team name" required />
+        <label for="team-captain-hall">Select Hall:</label>
+        <select id="team-captain-hall" required onchange="updateNamesBasedOnHall()">
+          <option value="10">Hall 10</option>
+          <option value="11">Hall 11</option>
+          <option value="14">Hall 14</option>
+        </select>
+        
+        <h3>Captain Details</h3>
+        <div id="team-captain-row" class="row">
+          <label>Name:</label>
+          <input type="text" class="team-name-input" placeholder="Type or select a name..." required />
+          <label>Roll Number:</label>
+          <input type="text" class="roll-input" placeholder="Auto-filled or enter manually" required />
+          <label>Room Number:</label>
+          <input type="text" class="room-input" placeholder="Auto-filled or enter manually" required />
+          <label>WhatsApp Number:</label>
+          <input type="text" class="whatsapp-input" placeholder="Required" required />
+          <label>Email ID:</label>
+          <input type="email" class="email-input" placeholder="Required" required />
+        </div>
+        
+        <h3>Team Members</h3>
+        <div id="team-players-container"></div>
+        <button type="button" onclick="addTeamPlayerRow()">Add Player</button>
+        <br /><br />
+        <button type="button" onclick="saveTeamRegistration()">Submit</button>
+      </form>
+    </div>
+    
+    <!-- Individual Registration Container -->
+    <div id="individual-registration-container" style="display:none;">
+      <h1>Individual Registration</h1>
+      <form id="individual-form">
+        <h3>Instructions:</h3>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">1.</strong> 
+          Fill in your <strong>Name</strong> and <strong>Select the Hall</strong>. Ensure you are registering as an individual – all details must correspond to your own information.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">2.</strong> 
+          The venue is tentatively set at the <strong>Hall 10 &amp; 11 Common Yard</strong>. The final venue and date will be decided after considering the number of registrations and resident feedback.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">3.</strong> 
+          The registration fee is <strong>₹29/person</strong>.
+        </p>        
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">4.</strong> 
+          After submission, you will be contacted for further details.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">5.</strong> 
+          For best results, use a Desktop or Laptop.
+        </p>
+        <p>
+          <strong style="background-color:#FFECB3; padding:2px 4px;">6.</strong> 
+          If you register as an individual, we will try to include you in a Registered team if the team captain agrees.
+        </p>
+        
+        <h3>Individual Information:</h3>
+        <label for="individual-hall">Select Hall:</label>
+        <select id="individual-hall" required onchange="updateIndividualNamesBasedOnHall()">
+          <option value="10">Hall 10</option>
+          <option value="11">Hall 11</option>
+          <option value="14">Hall 14</option>
+        </select>
+        <label for="individual-name">Name:</label>
+        <input type="text" id="individual-name" placeholder="Type or select your name..." required />
+        <label for="individual-roll">Roll Number:</label>
+        <input type="text" id="individual-roll" placeholder="Auto-filled or enter manually" required />
+        <label for="individual-room">Room Number:</label>
+        <input type="text" id="individual-room" placeholder="Auto-filled or enter manually" required />
+        <label for="individual-whatsapp">WhatsApp Number:</label>
+        <input type="text" id="individual-whatsapp" placeholder="Required" required />
+        <label for="individual-email">Email ID:</label>
+        <input type="email" id="individual-email" placeholder="Required" required />
+        <br /><br />
+        <button type="button" onclick="saveIndividualRegistration()">Submit</button>
+      </form>
+    </div>
+    
+    <!-- Registered Teams Container -->
+    <div id="registered-teams-container">
+      <h2>Registered Teams</h2>
+      <div id="registered-teams">
+        <!-- Aggregated team details will appear here as a list -->
+      </div>
+      <button type="button" onclick="loadRegisteredTeams()">Refresh Teams</button>
+    </div>
+    
+    <!-- Note: Individual registration details will only be saved to the spreadsheet and not displayed here. -->
+    
+  </body>
+</html>
